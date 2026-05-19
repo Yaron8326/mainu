@@ -9,3 +9,5 @@ dist
 .vscode/*
 !.vscode/extensions.json
 .claude/
+tsconfig.tsbuildinfo
+*.tsbuildinfo
