@@ -27,10 +27,60 @@ export async function listTopDishes(limit = 10): Promise<DishWithRestaurant[]> {
         return { ...d, restaurant: { id: rest.id, name: rest.name, address: rest.address } }
       })
   }
+  // Show rated dishes first, then unrated. This keeps the homepage populated
+  // even before users start rating (instead of an empty "TOP 10" section).
   const { data, error } = await supabase
     .from('dishes')
     .select('*, restaurant:restaurants(id, name, address)')
-    .gt('ratings_count', 0)
+    .order('ratings_count', { ascending: false })
+    .order('avg_rating', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return data as unknown as DishWithRestaurant[]
+}
+
+export async function listDishesByCategory(category: string, limit = 20): Promise<DishWithRestaurant[]> {
+  if (isDemo()) {
+    return mockDishes
+      .filter((d) => d.category === category)
+      .sort((a, b) => b.avg_rating - a.avg_rating)
+      .slice(0, limit)
+      .map((d) => {
+        const rest = mockRestaurants.find((r) => r.id === d.restaurant_id)!
+        return { ...d, restaurant: { id: rest.id, name: rest.name, address: rest.address } }
+      })
+  }
+  const { data, error } = await supabase
+    .from('dishes')
+    .select('*, restaurant:restaurants(id, name, address)')
+    .eq('category', category)
+    .order('ratings_count', { ascending: false })
+    .order('avg_rating', { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return data as unknown as DishWithRestaurant[]
+}
+
+// Search dishes by a keyword tag — used for cuisine browsing like "המבורגר" / "פסטה"
+// without requiring a new tags table. Matches against dish name (Postgres ILIKE).
+export async function listDishesByKeyword(keyword: string, limit = 20): Promise<DishWithRestaurant[]> {
+  if (isDemo()) {
+    const lower = keyword.toLowerCase()
+    return mockDishes
+      .filter((d) => d.name.toLowerCase().includes(lower))
+      .sort((a, b) => b.avg_rating - a.avg_rating)
+      .slice(0, limit)
+      .map((d) => {
+        const rest = mockRestaurants.find((r) => r.id === d.restaurant_id)!
+        return { ...d, restaurant: { id: rest.id, name: rest.name, address: rest.address } }
+      })
+  }
+  const { data, error } = await supabase
+    .from('dishes')
+    .select('*, restaurant:restaurants(id, name, address)')
+    .ilike('name', `%${keyword}%`)
+    .order('ratings_count', { ascending: false })
     .order('avg_rating', { ascending: false })
     .limit(limit)
   if (error) throw error

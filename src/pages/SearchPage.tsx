@@ -1,14 +1,34 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import Header from '../components/Header'
 import DishCard from '../components/DishCard'
 import { searchDishes } from '../lib/queries'
 
-const SUGGESTIONS = ['פסטה', 'המבורגר', 'סושי', 'חומוס', 'ראמן', 'פלאפל']
+const SUGGESTIONS = ['פסטה', 'המבורגר', 'סושי', 'חומוס', 'ראמן', 'פלאפל', 'שווארמה', 'פיצה']
 
 export default function SearchPage() {
-  const [q, setQ] = useState('')
-  const [submitted, setSubmitted] = useState('')
+  const [params, setParams] = useSearchParams()
+  const initialQ = params.get('q') ?? ''
+  const [q, setQ] = useState(initialQ)
+  const [submitted, setSubmitted] = useState(initialQ)
+
+  // Keep URL ?q= in sync with submitted searches — lets users share/bookmark search URLs
+  useEffect(() => {
+    if (submitted) setParams({ q: submitted }, { replace: true })
+    else if (params.get('q')) setParams({}, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitted])
+
+  // Respond to external nav (e.g. clicking a cuisine tile on HomePage)
+  useEffect(() => {
+    const qp = params.get('q') ?? ''
+    if (qp && qp !== submitted) {
+      setQ(qp)
+      setSubmitted(qp)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params])
 
   const { data, isLoading } = useQuery({
     queryKey: ['search', submitted],
