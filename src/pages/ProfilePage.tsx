@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import Header from '../components/Header'
 import LevelBadge from '../components/LevelBadge'
@@ -13,7 +13,16 @@ import type { DishCategory } from '../types/db'
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>()
   const { user } = useUser()
+  const nav = useNavigate()
   const userId = id ?? user?.id
+
+  // After signing out, the previous profile URL still works (read is public),
+  // so push the user to a sensible "logged-out" landing.
+  const handleSignOut = async () => {
+    if (isDemo()) demoSignOut()
+    else await supabase.auth.signOut()
+    nav('/auth', { replace: true })
+  }
 
   const { data: profile } = useQuery({
     queryKey: ['profile', userId],
@@ -125,7 +134,7 @@ export default function ProfilePage() {
 
             {isMe && (
               <button
-                onClick={() => (isDemo() ? demoSignOut() : supabase.auth.signOut())}
+                onClick={handleSignOut}
                 className="mt-4 w-full text-xs text-ink-400 underline uppercase tracking-wider"
               >
                 התנתקות
