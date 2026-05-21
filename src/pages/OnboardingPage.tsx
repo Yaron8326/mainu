@@ -12,21 +12,42 @@ export function markOnboarded() {
   localStorage.setItem(ONBOARDED_KEY, '1')
 }
 
-const STEPS = [
+interface Step {
+  glyph: string
+  title: React.ReactNode
+  body: string
+}
+
+const STEPS: Step[] = [
   {
     glyph: '🍽️',
-    title: 'דרג מנות, לא מסעדות',
-    body: 'מסעדה אחת יכולה לתת המבורגר מדהים ופסטה גרועה. אצלנו, כל מנה מקבלת דירוג בנפרד.',
+    title: (
+      <>
+        דרג <span className="text-lime-500">מנות</span>,<br />
+        לא מסעדות
+      </>
+    ),
+    body: 'מסעדה אחת יכולה להגיש המבורגר מעולה ופסטה גרועה. אצלנו, כל מנה מקבלת דירוג בנפרד.',
   },
   {
     glyph: '⌕',
-    title: 'חפש מנה ספציפית',
-    body: 'במקום "איזו מסעדה איטלקית הכי טובה?" שאל "איפה הקרבונרה הכי טובה?". מצא את המנה שאתה רוצה, לא את המסעדה.',
+    title: (
+      <>
+        חפש <span className="text-lime-500">מנה</span><br />
+        ספציפית
+      </>
+    ),
+    body: 'במקום "איזו מסעדה איטלקית הכי טובה?", שאל "איפה הקרבונרה הכי טובה?". מצא מנה - לא מסעדה.',
   },
   {
     glyph: '✦',
-    title: 'בנה את ההיסטוריה שלך',
-    body: 'כל דירוג שלך עוזר לך לזכור איפה אכלת מה, ומציע למשתמשים עם טעם דומה מנות חדשות לטעום.',
+    title: (
+      <>
+        בנה את <span className="text-lime-500">הטעם</span><br />
+        שלך
+      </>
+    ),
+    body: 'כל דירוג שלך עוזר לזכור איפה אכלת מה, ומציע מנות חדשות לאנשים עם טעם דומה לשלך.',
   },
 ]
 
@@ -47,45 +68,62 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-ink-900 p-6">
-      <header className="flex items-center justify-between max-w-md mx-auto w-full">
-        <Logo size={32} />
+    <div className="fixed inset-0 bg-ink-900 flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-4 shrink-0">
+        <Logo size={28} />
         {!isLast && (
-          <button onClick={finish} className="text-xs text-ink-400 hover:text-ink-200 uppercase tracking-wider">
+          <button
+            onClick={finish}
+            className="text-xs text-ink-400 hover:text-ink-200 uppercase tracking-wider font-bold px-3 py-2"
+          >
             דלג
           </button>
         )}
-      </header>
+        {isLast && <div className="w-12" />}
+      </div>
 
-      <main className="flex-1 flex flex-col items-center justify-center text-center max-w-md mx-auto w-full">
-        <div className="w-32 h-32 rounded-3xl bg-lime-500/10 border border-lime-500/30 flex items-center justify-center text-7xl mb-8">
+      {/* Content - vertically centered */}
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+        <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-lime-500/10 border border-lime-500/30 flex items-center justify-center text-7xl sm:text-8xl mb-10 shadow-glow-lime">
           {current.glyph}
         </div>
-        <p className="text-[10px] uppercase tracking-[0.3em] text-lime-500 font-bold">
-          שלב {step + 1} מתוך {STEPS.length}
-        </p>
-        <h1 className="display-xl text-4xl text-ink-100 mt-3">{current.title}</h1>
-        <p className="text-ink-300 mt-4 max-w-xs leading-relaxed">{current.body}</p>
-      </main>
 
-      <footer className="max-w-md mx-auto w-full">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-lime-500 font-bold mb-3">
+          {step + 1} מתוך {STEPS.length}
+        </p>
+
+        <h1 className="display-xl text-4xl sm:text-5xl text-ink-100 leading-[1.05]">
+          {current.title}
+        </h1>
+
+        <p className="text-ink-300 mt-6 max-w-xs text-base leading-relaxed">
+          {current.body}
+        </p>
+      </div>
+
+      {/* Footer with dots + button */}
+      <div className="px-6 pb-8 sm:pb-10 shrink-0">
         <div className="flex justify-center gap-2 mb-6">
           {STEPS.map((_, i) => (
-            <span
+            <button
               key={i}
-              className={`h-1.5 rounded-full transition-all ${
-                i === step ? 'bg-lime-500 w-8' : 'bg-ink-600 w-1.5'
+              onClick={() => setStep(i)}
+              aria-label={`עבור לשלב ${i + 1}`}
+              className={`h-2 rounded-full transition-all ${
+                i === step ? 'bg-lime-500 w-10' : 'bg-ink-600 hover:bg-ink-500 w-2'
               }`}
             />
           ))}
         </div>
+
         <button
           onClick={next}
-          className="w-full bg-lime-500 hover:bg-lime-400 text-ink-900 py-4 rounded-full font-black uppercase tracking-wider text-sm shadow-glow-lime"
+          className="w-full max-w-md mx-auto block bg-lime-500 hover:bg-lime-400 active:scale-95 text-ink-900 py-4 rounded-full font-black uppercase tracking-wider text-sm shadow-glow-lime transition-all"
         >
-          {isLast ? 'בואו נתחיל' : 'הבא ←'}
+          {isLast ? 'בואו נתחיל ←' : 'הבא ←'}
         </button>
-      </footer>
+      </div>
     </div>
   )
 }

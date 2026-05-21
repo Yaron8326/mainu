@@ -2,6 +2,8 @@ export type Level = 'beginner' | 'advanced' | 'experienced' | 'pro' | 'master'
 
 export type DishCategory = 'starters' | 'mains' | 'desserts' | 'drinks' | 'sides'
 
+export type ModerationStatus = 'pending' | 'approved' | 'rejected'
+
 export interface Profile {
   id: string
   display_name: string | null
@@ -24,6 +26,8 @@ export interface Restaurant {
   cover_image_url: string | null
   avg_dish_rating: number
   created_at: string
+  status?: ModerationStatus
+  created_by?: string | null
 }
 
 export interface Dish {
@@ -37,6 +41,8 @@ export interface Dish {
   avg_rating: number
   ratings_count: number
   created_at: string
+  status?: ModerationStatus
+  created_by?: string | null
 }
 
 export interface Rating {

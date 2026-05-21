@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Header from '../components/Header'
 import { createRestaurant } from '../lib/queries'
 import { useUser } from '../hooks/useUser'
+import PendingReviewScreen from '../components/PendingReviewScreen'
 
 const CUISINE_OPTIONS = [
   'איטלקי', 'אמריקאי', 'אסייתי', 'יפני', 'סושי', 'ראמן', 'ים תיכוני',
@@ -21,6 +22,7 @@ export default function AddRestaurantPage() {
   const [tags, setTags] = useState<string[]>([])
   const [isKosher, setIsKosher] = useState(false)
   const [isVegan, setIsVegan] = useState(false)
+  const [submittedName, setSubmittedName] = useState<string | null>(null)
 
   const toggleTag = (t: string) => {
     setTags((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]))
@@ -39,9 +41,15 @@ export default function AddRestaurantPage() {
     },
     onSuccess: (rest) => {
       qc.invalidateQueries({ queryKey: ['restaurants'] })
-      nav(`/restaurant/${rest.id}`, { replace: true })
+      // Show "pending review" screen instead of jumping to the restaurant page.
+      // The restaurant won't be visible to other users until admin approval.
+      setSubmittedName(rest.name)
     },
   })
+
+  if (submittedName) {
+    return <PendingReviewScreen type="restaurant" name={submittedName} />
+  }
 
   if (!user) {
     return (

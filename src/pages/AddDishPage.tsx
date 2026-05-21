@@ -6,6 +6,7 @@ import { createDish, searchRestaurants } from '../lib/queries'
 import { useUser } from '../hooks/useUser'
 import { CATEGORY_LABELS } from '../lib/gamification'
 import type { Restaurant, DishCategory } from '../types/db'
+import PendingReviewScreen from '../components/PendingReviewScreen'
 
 type Step = 'restaurant' | 'details' | 'done'
 
@@ -24,6 +25,7 @@ export default function AddDishPage() {
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState<DishCategory>('mains')
   const [price, setPrice] = useState('')
+  const [submittedName, setSubmittedName] = useState<string | null>(null)
 
   const { data: restaurants } = useQuery({
     queryKey: ['rest-search', search],
@@ -46,9 +48,14 @@ export default function AddDishPage() {
     onSuccess: (dish) => {
       qc.invalidateQueries({ queryKey: ['dishes', restaurant!.id] })
       qc.invalidateQueries({ queryKey: ['top-dishes'] })
-      nav(`/dish/${dish.id}`, { replace: true })
+      // Show "pending review" screen — dish won't be public until admin approval.
+      setSubmittedName(dish.name)
     },
   })
+
+  if (submittedName) {
+    return <PendingReviewScreen type="dish" name={submittedName} />
+  }
 
   if (!user) {
     return (

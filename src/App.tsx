@@ -12,6 +12,9 @@ import AddDishPage from './pages/AddDishPage'
 import OnboardingPage, { hasOnboarded } from './pages/OnboardingPage'
 import { useUser } from './hooks/useUser'
 
+// Routes where the floating bottom nav must not appear (full-screen flows).
+const NAV_HIDDEN_ROUTES = new Set(['/onboarding', '/auth'])
+
 export default function App() {
   const { loading, user } = useUser()
   const loc = useLocation()
@@ -25,9 +28,11 @@ export default function App() {
   }
 
   // Route a never-onboarded, never-signed-in visitor through onboarding first.
-  if (!user && !hasOnboarded() && loc.pathname !== '/onboarding' && loc.pathname !== '/auth') {
+  if (!user && !hasOnboarded() && !NAV_HIDDEN_ROUTES.has(loc.pathname)) {
     return <Navigate to="/onboarding" replace />
   }
+
+  const showNav = !NAV_HIDDEN_ROUTES.has(loc.pathname)
 
   return (
     <div className="min-h-screen">
@@ -45,7 +50,7 @@ export default function App() {
         <Route path="/profile/:id" element={<ProfilePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <BottomNav />
+      {showNav && <BottomNav />}
     </div>
   )
 }
