@@ -14,6 +14,10 @@ export interface Profile {
   created_at: string
 }
 
+export type WeekdayHours = { open: string; close: string }[]
+// Hours object is keyed by JS getDay() day index: 0=Sun, 1=Mon, ..., 6=Sat.
+export type Hours = Partial<Record<'0' | '1' | '2' | '3' | '4' | '5' | '6', WeekdayHours>>
+
 export interface Restaurant {
   id: string
   name: string
@@ -28,6 +32,9 @@ export interface Restaurant {
   created_at: string
   status?: ModerationStatus
   created_by?: string | null
+  phone?: string | null
+  reservation_url?: string | null
+  hours?: Hours | null
 }
 
 export interface Dish {
