@@ -1,5 +1,23 @@
 import { supabase, STORAGE_BUCKET } from './supabase'
 import type { Restaurant, Dish, Rating, RatingWithProfile, DishWithRestaurant, Profile, DishCategory } from '../types/db'
+
+export interface NewRestaurantInput {
+  name: string
+  address?: string | null
+  cuisine_tags?: string[] | null
+  is_kosher?: boolean
+  is_vegan_friendly?: boolean
+  cover_image_url?: string | null
+}
+
+export interface NewDishInput {
+  restaurant_id: string
+  name: string
+  description?: string | null
+  category: DishCategory
+  price?: number | null
+  image_url?: string | null
+}
 import {
   isDemo,
   mockDishes,
@@ -211,6 +229,91 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
   if (error) throw error
   return data as Profile | null
+}
+
+export async function createRestaurant(input: NewRestaurantInput): Promise<Restaurant> {
+  if (isDemo()) {
+    const r: Restaurant = {
+      id: `rest-${Date.now()}`,
+      name: input.name,
+      address: input.address ?? null,
+      lat: null,
+      lng: null,
+      cuisine_tags: input.cuisine_tags ?? null,
+      is_kosher: input.is_kosher ?? false,
+      is_vegan_friendly: input.is_vegan_friendly ?? false,
+      cover_image_url: input.cover_image_url ?? null,
+      avg_dish_rating: 0,
+      created_at: new Date().toISOString(),
+    }
+    mockRestaurants.unshift(r)
+    return r
+  }
+  const { data, error } = await supabase
+    .from('restaurants')
+    .insert({
+      name: input.name,
+      address: input.address ?? null,
+      cuisine_tags: input.cuisine_tags ?? null,
+      is_kosher: input.is_kosher ?? false,
+      is_vegan_friendly: input.is_vegan_friendly ?? false,
+      cover_image_url: input.cover_image_url ?? null,
+    })
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as Restaurant
+}
+
+export async function createDish(input: NewDishInput): Promise<Dish> {
+  if (isDemo()) {
+    const d: Dish = {
+      id: `d-${Date.now()}`,
+      restaurant_id: input.restaurant_id,
+      name: input.name,
+      description: input.description ?? null,
+      category: input.category,
+      price: input.price ?? null,
+      image_url: input.image_url ?? null,
+      avg_rating: 0,
+      ratings_count: 0,
+      created_at: new Date().toISOString(),
+    }
+    mockDishes.unshift(d)
+    return d
+  }
+  const { data, error } = await supabase
+    .from('dishes')
+    .insert({
+      restaurant_id: input.restaurant_id,
+      name: input.name,
+      description: input.description ?? null,
+      category: input.category,
+      price: input.price ?? null,
+      image_url: input.image_url ?? null,
+    })
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as Dish
+}
+
+export async function searchRestaurants(q: string, limit = 10): Promise<Restaurant[]> {
+  if (isDemo()) {
+    if (!q.trim()) return mockRestaurants.slice(0, limit)
+    const lower = q.toLowerCase()
+    return mockRestaurants
+      .filter((r) => r.name.toLowerCase().includes(lower))
+      .slice(0, limit)
+  }
+  if (!q.trim()) return listRestaurants().then((arr) => arr.slice(0, limit))
+  const { data, error } = await supabase
+    .from('restaurants')
+    .select('*')
+    .ilike('name', `%${q}%`)
+    .limit(limit)
+  if (error) throw error
+  return data as Restaurant[]
 }
 
 export async function listMyRatings(userId: string): Promise<(Rating & { dish: { id: string; name: string; category: DishCategory; restaurant_id: string } })[]> {
