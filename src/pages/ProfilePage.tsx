@@ -2,10 +2,11 @@ import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import Header from '../components/Header'
 import LevelBadge from '../components/LevelBadge'
-import { getProfile, listMyRatings } from '../lib/queries'
+import { getProfile, listMyRatings, listPendingRestaurants, listPendingDishes } from '../lib/queries'
 import { supabase } from '../lib/supabase'
 import { useUser, demoSignOut } from '../hooks/useUser'
 import { isDemo } from '../lib/mockData'
+import { isAdmin } from '../lib/admin'
 import { CATEGORY_LABELS, CATEGORY_EMOJI, computeSpecialty, levelForCount, progressToNext } from '../lib/gamification'
 import type { DishCategory } from '../types/db'
 
@@ -25,6 +26,19 @@ export default function ProfilePage() {
     queryFn: () => listMyRatings(userId!),
     enabled: !!userId,
   })
+
+  // For admins, prefetch pending counts so we can show a notification badge
+  const { data: pendingRest } = useQuery({
+    queryKey: ['admin', 'pending-restaurants'],
+    queryFn: listPendingRestaurants,
+    enabled: isAdmin(user),
+  })
+  const { data: pendingDish } = useQuery({
+    queryKey: ['admin', 'pending-dishes'],
+    queryFn: listPendingDishes,
+    enabled: isAdmin(user),
+  })
+  const totalPending = (pendingRest?.length ?? 0) + (pendingDish?.length ?? 0)
 
   if (!userId) {
     return (
@@ -93,6 +107,21 @@ export default function ProfilePage() {
                 </div>
               )}
             </div>
+
+            {isMe && isAdmin(user) && (
+              <Link
+                to="/admin"
+                className="mt-4 flex items-center justify-between bg-lime-500/10 border border-lime-500/30 rounded-2xl p-3 hover:bg-lime-500/15"
+              >
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-lime-500 font-bold">פאנל אדמין</p>
+                  <p className="text-sm text-ink-100 font-black mt-0.5">
+                    {totalPending > 0 ? `${totalPending} ממתינים לאישור` : 'אין ממתינים'}
+                  </p>
+                </div>
+                <span className="text-lime-500 text-xl">‹</span>
+              </Link>
+            )}
 
             {isMe && (
               <button

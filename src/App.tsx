@@ -9,6 +9,7 @@ import ProfilePage from './pages/ProfilePage'
 import FeedPage from './pages/FeedPage'
 import AddRestaurantPage from './pages/AddRestaurantPage'
 import AddDishPage from './pages/AddDishPage'
+import AdminPage from './pages/AdminPage'
 import OnboardingPage, { hasOnboarded } from './pages/OnboardingPage'
 import { useUser } from './hooks/useUser'
 
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/add/restaurant" element={<AddRestaurantPage />} />
         <Route path="/add/dish" element={<AddDishPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="/restaurant/:id" element={<RestaurantPage />} />
         <Route path="/dish/:id" element={<DishPage />} />
         <Route path="/profile" element={<ProfilePage />} />

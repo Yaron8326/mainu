@@ -316,6 +316,44 @@ export async function searchRestaurants(q: string, limit = 10): Promise<Restaura
   return data as Restaurant[]
 }
 
+// ---------------------------------------------------------------
+// Admin moderation queries
+// ---------------------------------------------------------------
+
+export async function listPendingRestaurants(): Promise<Restaurant[]> {
+  if (isDemo()) return []
+  const { data, error } = await supabase
+    .from('restaurants')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data as Restaurant[]
+}
+
+export async function listPendingDishes(): Promise<DishWithRestaurant[]> {
+  if (isDemo()) return []
+  const { data, error } = await supabase
+    .from('dishes')
+    .select('*, restaurant:restaurants(id, name, address)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data as unknown as DishWithRestaurant[]
+}
+
+export async function updateRestaurantStatus(id: string, status: 'approved' | 'rejected'): Promise<void> {
+  if (isDemo()) return
+  const { error } = await supabase.from('restaurants').update({ status }).eq('id', id)
+  if (error) throw error
+}
+
+export async function updateDishStatus(id: string, status: 'approved' | 'rejected'): Promise<void> {
+  if (isDemo()) return
+  const { error } = await supabase.from('dishes').update({ status }).eq('id', id)
+  if (error) throw error
+}
+
 export async function listMyRatings(userId: string): Promise<(Rating & { dish: { id: string; name: string; category: DishCategory; restaurant_id: string } })[]> {
   if (isDemo()) return mock_listMyRatings(userId)
   const { data, error } = await supabase
